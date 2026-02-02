@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.1.0
 info:
   version: 1.0.0
   contact:
@@ -1398,7 +1398,7 @@ components:
         type: boolean
       description: |
         Angir at rekkefølgen på x- og y-aksen skal være snudd mot det som er spesifisert i EPSG-koden. Dette har kun innvirkning på noen geodetiske koordinatsystemer - se [i proj-dokumentasjonen her](https://proj.org/en/stable/development/reference/functions.html#c.proj_normalize_for_visualization).
-    referencesParam:  
+    referencesParam:
       in: query
       name: references
       schema:
@@ -1406,23 +1406,29 @@ components:
         enum: [none, direct, all]
       required: true
       description: |
-        Angir hvilke refererte features som skal hentes ut i tillegg til feature det spørres direkte etter med lokalid.
+        Angir hvilke objekter som skal hentes ut i tillegg til objektet det spørres direkte etter med lokalid eller område. Parameteret har kun effekt på flater og avgrensningskurver.
 
-        Punkter har ingen referanser, og parameteret påvirker derfor ikke uthenting av et punkt.
+        En avgrensningskurve er en linje som er brukt i ytre eller indre avgrensning til én eller flere flater.
 
-        `none` - Ingen refererte features hentes ut. Ingen ekstra features låses.
-        - Flater får *ikke* med linje-features til avgrensningskurver.
+        ### Retningslinjer
 
-        `direct` - Features med direkte referanser hentes ut. Kun direkte referanser låses.
-        - Kurver får med features til flater som bruker kurven i avgrensningen, samt de andre linje-features til avgrensningskurvene i flatene. Både kurven og alle flatene låses, men ikke de andre linje-features i avgrensningen i flatene.
-        - Flater får med alle linje-features til avgrensningskurvene i flaten. Kun flaten låses.
+        Det anbefales å bruke `none` dersom man ikke har spesielle behov. Dette er det raskeste. 
+        
+        Bruk `direct` dersom man trenger alle avgrensningskurver til alle flater i resultatet, eller dersom man skal endre linjer uten å flytte endepunktene.
+        
+        Bruk `all` for å få ut alle flater og avgrensningskurver som må oppdateres dersom man skal flytte endepunktene i en linje.
+        
+        ### Detaljer
 
-        `all` - Features med direkte og indirekte tilhørende referanser hentes ut. Alle referanser som hentes ut låses.
-        - Kurver får i tillegg til referanser fra `direct` også med:
-          - flate-features som har avgrensningskurver som begynner eller slutter i valgt linjes endepunkter 
-          - linje-features i flate-features i forrige pkt som begynner eller slutter i valgt linjes endepunkter
+        `none` - Ingen ekstra objekter hentes ut.
 
-        - Flater får samme referanser som i `direct`. Både flaten og alle avgrensningskurvene låses.
+        `direct` 
+        - Flater får med alle avgrensningskurver. Kun flaten låses.
+        - Kurver får med alle flater som bruker kurven i avgrensningen. Kurven og flatene låses. Flatene i resultatet får i tillegg med alle sine avgrensningskurver (disse kurvene låses ikke).
+
+        `all`
+        - Flater får med alle avgrensningskurver. Både flaten og alle avgrensningskurvene låses.
+        - Kurver får med alle flater og avgrensningskurver som ender i etterspurt kurve og henger sammen med etterspurt kurve via andre flater. Flatene og alle avgrensningskurvene låses.
     lockingParam:
       in: query
       name: locking_type
